@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Implementation-Title: etf-bda
+Target-Compatibility: 1.8
+Build-Date: 190112005912
+Implementation-Version: 1.0.30
+Built-By: herrmann@interactive-instruments.de
+Specification-Vendor: interactive instruments GmbH
+Implementation-Vendor-Id: de.interactive_instruments
+Build-Gradle: 4.5.1
+Build-ii-bda: 1.0.30.5
+Implementation-Vendor: interactive instruments GmbH
+Implementation-Revision: 35193b4
+Source-Compatibility: 1.8
+Implementation-Build: 0
+Build-Host: JAX
+Build-User: herrmann
+Specification-Vendor-Id: de.interactive_instruments
+Build-JDK: 1.8.0_151
+

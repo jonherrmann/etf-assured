@@ -1,0 +1,616 @@
+/**
+ * Copyright 2010-2018 interactive instruments GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import java.util.regex.Matcher
+import org.gradle.internal.os.OperatingSystem
+
+
+/**
+ * etf build and deployment helper for gradle
+ *
+ * @author J. Herrmann ( herrmann <aT) interactive-instruments (doT> de )
+ */
+ext.bdaVersion = '1.0.30.5'
+println "ETF-BDA: Applying ii BDA gradle script ${ext.bdaVersion} to the project"
+
+buildscript {
+
+    repositories {
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+
+        // Release plugin
+        classpath 'net.researchgate:gradle-release:2.7.0'
+
+        // Code formatting and license headers plugin
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.4.0'
+
+        // Git plugin for version information, repo url, etc
+        classpath 'org.ajoberstar:grgit:2.3.0'
+
+        // Code Quality
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.2"
+    }
+}
+
+// Check gradle version
+/////////////////////////////////////
+
+final GradleVersion currentGradleVersion = GradleVersion.current()
+final GradleVersion requiredVersion = GradleVersion.version('3.5')
+if(currentGradleVersion<requiredVersion) {
+    throw new GradleException("ETF-BDA: The configured Gradle version "+currentGradleVersion+
+            " in the gradle-wrapper.properties file "+
+            " is too old. Required is at least "+requiredVersion.toString())
+}
+
+// Configure semantic version
+/////////////////////////////////////
+
+ext.versionFile = rootProject.file("./version.properties")
+
+if (!ext.versionFile.exists()) {
+    throw new GradleException("ETF-BDA: required file version.properties does not exist! Create it!")
+}
+if (!ext.versionFile.canRead()) {
+    throw new GradleException("ETF-BDA: can not read file version.properties ! Check file permissions!")
+}
+ext.semversion = null
+if( System.getenv("RELEASE_VERSION") ) {
+    ext.semversion = System.getenv("RELEASE_VERSION")
+}else{
+    def versionProperties = new Properties()
+    ext.versionFile.withInputStream {
+        stream -> versionProperties.load(stream)
+    }
+    ext.semversion = versionProperties.version
+}
+if (ext.semversion == null) {
+    throw new GradleException("ETF-BDA: property version not set in file version.properties or RELEASE_VERSION environment variable not defined!")
+}
+ext.semversion = ext.semversion.toUpperCase()
+if(System.getenv("FORCE_VERSION_TYPE")?.toUpperCase()=='SNAPSHOT' && !ext.semversion.contains("SNAPSHOT")) {
+    println "ETF-BDA: SNAPSHOT version forced"
+    ext.semversion += "-SNAPSHOT"
+}else if(System.getenv("FORCE_VERSION_TYPE")?.toUpperCase()=='RELEASE' && ext.semversion.contains("SNAPSHOT")) {
+    println "ETF-BDA: RELEASE version forced"
+    ext.semversion = ext.semversion.replaceAll('-SNAPSHOT', '')
+}
+def sTasks = project.gradle.startParameter.taskNames
+if (ext.semversion.contains("SNAPSHOT"))
+{
+    if (sTasks.contains('release') || sTasks.contains('runBuildTasks')) {
+        // First case applies when you call release taks, second one is one of
+        // the tasks that are executed in a NEW gradle instance
+        println "ETF-BDA: Ignoring SNAPSHOT handling during RELEASE task execution."
+        ext.snapshotSuffix = ""
+    } else {
+        ext.snapshotSuffix = "-SNAPSHOT"
+    }
+} else {
+    ext.snapshotSuffix = ""
+}
+
+// Next version
+/////////////////////////////////////
+ext.nextVersion = null
+if( System.getenv("RELEASE_NEXT_VERSION") ) {
+    ext.nextVersion = System.getenv("RELEASE_NEXT_VERSION").toUpperCase()
+}
+
+// Build number
+/////////////////////////////////////
+ext.versionBuildNumber = '0'
+if (hasProperty("teamcity")) {
+    ext.versionBuildNumber = teamcity["build.number"]
+} else if (System.getenv("BUILD_NUMBER")) {
+    ext.versionBuildNumber = System.getenv("BUILD_NUMBER")
+}
+
+// Credentials
+/////////////////////////////////////
+ext.r_user = project.findProperty("ii.etfdev.repo.username") ?: 'etf-public-dev'
+ext.r_pwd = project.findProperty("ii.etfdev.repo.password") ?: 'etf-public-dev'
+println "ETF-BDA: Authenticating will be done as user ${ext.r_user}"
+
+// Check if quality reports shall be generated
+/////////////////////////////////////
+ext.qualityReports = project.hasProperty("ii.etfdev.quality.reports") &&
+        project.getProperty("ii.etfdev.quality.reports") == "true"
+
+// License
+/////////////////////////////////////
+if(gradle.ext.has("ii.license.header")) {
+    ext.licenseHeaderName = gradle.ext.get("ii.license.header")
+}else{
+    ext.licenseHeaderName = 'apache2-license'
+}
+
+// Replace versions in the Readme.md
+/////////////////////////////////////
+task updateReadme {
+    description 'Replace patterns found in the Readme.md'
+
+    doLast {
+
+        final File readmeFile = rootProject.file("./Readme.md")
+        if (readmeFile.exists()) {
+            final String afRepoUrl = uploadArchives.repositories.mavenDeployer.repository.url
+            // snapshot url needed? uploadArchives.repositories.mavenDeployer.snapshotRepository.url
+            assert afRepoUrl != null
+
+            // Prefer zips
+            final String file = uploadArchives.artifacts.files.sort()[0].name
+
+            final String baseUrl = afRepoUrl +"/"+ rootProject.group.replace('.','/') +
+                    "/"+ rootProject.name +"/"
+
+            final String completeUrl = baseUrl + rootProject.version +"/"+ file
+
+            final String latestVersionShield = '[![Latest version]'+
+                    '(http://img.shields.io/badge/latest%20version-'+rootProject.version+'-blue.svg)]'+
+                    '('+completeUrl+')'
+
+            String readmeText = readmeFile.text
+            readmeText = readmeText.replaceFirst(
+                    /\[\!\[Latest version\]\(http:\/\/img\.shields\.io\/badge\/latest\%20version-.*/ ,
+                    latestVersionShield)
+            readmeFile.write(readmeText)
+        }
+    }
+}
+
+def cDir = file(project.rootDir ? project.rootDir : '.')
+def gitDir = file('.git')
+for(int i=0; i<4; i++) {
+    if(!cDir) {
+        break;
+    }
+    gitDir = new File(cDir, '.git')
+    if(gitDir.exists()) {
+        break
+    }
+    cDir = cDir.getParentFile()
+}
+if(!gitDir.exists()) {
+    throw new GradleException("ETF-BDA: '.git' directory not found!")
+}else{
+    task installGitHooks(type: Copy) {
+        from(new File(cDir, './build/gradle/pre-commit'))
+        destinationDir = new File(gitDir, '.git/hooks')
+        fileMode 0555
+    }
+}
+
+
+allprojects {
+
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    }
+
+    // Default lib versions
+    ext {
+        // testCompile group: 'junit', name: 'junit', version: etf_junitTestVersion
+        etf_junitTestVersion = '4.12'
+
+        // testCompile group: 'ch.qos.logback', name: 'logback-classic', version: etf_logbackVersion
+        etf_logbackVersion = '1.2.3'
+
+        // compile group: 'org.slf4j', name: 'slf4j-api', version: etf_slf4jApiVersion
+        etf_slf4jApiVersion = '1.7.25'
+
+        // compile group: 'org.apache.commons', name: 'commons-lang3', version: etf_commonsLang3Version
+        etf_commonsLang3Version = '3.7'
+
+        // compile group: 'commons-codec', name: 'commons-codec', version: etf_commonsCodecVersion
+        etf_commonsCodecVersion = '1.11'
+
+        // compile group: 'commons-io', name: 'commons-io', version: etf_commonsIoVersion
+        etf_commonsIoVersion = '2.6'
+
+        // compile group: 'commons-collections', name: 'commons-collections', version: etf_commonsCollectionsVersion
+        etf_commonsCollectionsVersion = '3.2.2'
+
+        // compile group: 'xerces', name: 'xercesImpl', version: etf_xercesVersion
+        etf_xercesVersion = '2.11.0.beta'
+
+        // compile group: 'xml-apis', name: 'xml-apis', version: etf_xmlApisVersion
+        etf_xmlApisVersion = '1.4.01'
+
+        // compile group: 'net.sf.saxon', name: 'Saxon-HE', version: etf_saxonHe
+        etf_saxonHe = '9.9.0-1'
+
+        // compile group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: etf_jaxbVersion
+        etf_jaxbVersion = '2.3.0'
+
+        // compile group: 'de.interactive_instruments', name: 'ii-commons-util', version: etf_iiCommonsVersion
+        etf_iiCommonsVersion = '2.0.1'
+    }
+
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    if( rootProject == project ) {
+        apply plugin: org.sonarqube.gradle.SonarQubePlugin
+    }
+
+    version = rootProject.ext.semversion
+    assert version != null
+
+    if(rootProject.ext.nextVersion != null) {
+        project.setProperty("release.newVersion", ext.nextVersion)
+    }
+
+    ext.snapshotSuffix = rootProject.ext.snapshotSuffix
+    assert ext.snapshotSuffix != null
+
+    ext.versionBuildNumber = rootProject.ext.versionBuildNumber
+    assert ext.versionBuildNumber != null
+
+    ext.repo = org.ajoberstar.grgit.Grgit.open(dir: gitDir)
+    ext.repoUrl = null
+    for(remote in repo.remote.list()) {
+        if(ext.repoUrl==null || remote.name=='origin') {
+            def url = remote.url
+            def gitPostfix = url.indexOf(".git")
+            ext.repoUrl = url.substring(url.indexOf(":") + 1, gitPostfix == -1 ? url.length() : gitPostfix)
+        }
+    }
+
+    assert gradle.rootProject.ext.r_user != null
+    assert gradle.rootProject.ext.r_pwd != null
+
+    ext.spotlessJavaSrcFiles = project.fileTree(project.projectDir) {
+        include 'src/main/java/de/interactive_instruments/**/*.java'
+        include 'src/test/java/de/interactive_instruments/**/*.java'
+        exclude '**/package-info.java'
+        exclude 'apache2-license-header.java'
+        exclude 'eupl-12-license-header*.java'
+    }
+
+    repositories {
+        // First get modified external libraries
+        maven {
+            url "http://services.interactive-instruments.de/etfdev-af/ext-releases-local"
+            credentials {
+                username gradle.rootProject.ext.r_user
+                password gradle.rootProject.ext.r_pwd
+            }
+        }
+        maven {
+            url "http://services.interactive-instruments.de/etfdev-af/ext-cache"
+            credentials {
+                username gradle.rootProject.ext.r_user
+                password gradle.rootProject.ext.r_pwd
+            }
+        }
+        mavenCentral()
+
+        if (project.snapshotSuffix) {
+            if(gradle.rootProject.ext.versionBuildNumber == '0') {
+                // Enable local Maven repositories if build is not running in Jenkins
+                mavenLocal()
+            }
+            if(gradle.rootProject.ext.versionBuildNumber != '0' && System.getenv('AF_INT_ENV')) {
+                def intEnv = System.getenv('AF_INT_ENV').toLowerCase()
+                println "ETF-BDA: Using "+intEnv+" repository"
+                maven {
+                    url "https://services.interactive-instruments.de/etfdev-af/"+intEnv
+                    credentials {
+                        username gradle.rootProject.ext.r_user
+                        password gradle.rootProject.ext.r_pwd
+                    }
+                }
+            }else{
+                println "ETF-BDA: Using SNAPSHOT repository"
+            }
+            maven {
+                url "https://services.interactive-instruments.de/etfdev-af/snapshot"
+                credentials {
+                    username gradle.rootProject.ext.r_user
+                    password gradle.rootProject.ext.r_pwd
+                }
+            }
+        } else {
+            println "ETF-BDA: Using RELEASE repository"
+            maven {
+                url "https://services.interactive-instruments.de/etfdev-af/release"
+                credentials {
+                    username gradle.rootProject.ext.r_user
+                    password gradle.rootProject.ext.r_pwd
+                }
+            }
+        }
+    }
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    if(project.hasProperty("compileJava")) {
+        [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+    }
+    if(project.hasProperty("compileGroovy")) {
+        [compileGroovy, compileGroovy]*.options*.encoding = 'UTF-8'
+    }
+
+    if (gradle.rootProject.ext.qualityReports) {
+        /////////////////////////////////////
+        // STATIC CODE ANALYSIS - FINDBUGS //
+        /////////////////////////////////////
+        apply plugin: 'findbugs'
+        findbugs {
+            toolVersion = "3.0.1"
+            ignoreFailures = true
+            reportsDir = file("$project.buildDir/reports/findbugs")
+            effort = "max"
+            reportLevel = "high"
+        }
+        findbugsMain {
+            reports {
+                xml.enabled = false
+                html.enabled = true
+            }
+        }
+
+        ////////////////////////////////
+        // STATIC CODE ANALYSIS - PMD //
+        ////////////////////////////////
+        apply plugin: 'pmd'
+        pmd {
+            ignoreFailures = true
+            sourceSets = [sourceSets.main]
+            reportsDir = file("$project.buildDir/reports/pmd")
+        }
+        pmdMain {
+            reports {
+                xml.enabled = true
+                html.enabled = true
+            }
+        }
+
+        ////////////////////////////////////
+        // CODE COVERAGE METRICS - JACOCO //
+        ////////////////////////////////////
+        apply plugin: 'jacoco'
+        jacoco {
+            reportsDir = file("$project.buildDir/reports/jacoco")
+        }
+        jacocoTestReport {
+            reports {
+                xml.enabled = true
+                html.enabled = true
+            }
+        }
+
+        //////////////////////////////////////
+        // DESIGN QUALITY METRICS - JDEPEND //
+        //////////////////////////////////////
+        apply plugin: 'jdepend'
+        jdepend {
+            reportsDir = file("$project.buildDir/reports/jdepend")
+        }
+        jdependMain {
+            reports {
+                xml.enabled false
+                text.enabled true
+            }
+        }
+    }
+
+    ////////////
+    // UPLOAD //
+    ////////////
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                if(gradle.rootProject.ext.versionBuildNumber != '0' && System.getenv('AF_INT_ENV')) {
+                    def intEnv = System.getenv('AF_INT_ENV').toLowerCase()
+                    snapshotRepository(url: "https://services.interactive-instruments.de/etfdev-af/"+intEnv) {
+                        authentication(userName: gradle.rootProject.ext.r_user, password: gradle.rootProject.ext.r_pwd)
+                    }
+                }else{
+                    snapshotRepository(url: "http://services.interactive-instruments.de/etfdev-af/snapshot") {
+                        authentication(userName: gradle.rootProject.ext.r_user, password: gradle.rootProject.ext.r_pwd)
+                    }
+                }
+                repository(url: "http://services.interactive-instruments.de/etfdev-af/release") {
+                    authentication(userName: gradle.rootProject.ext.r_user, password: gradle.rootProject.ext.r_pwd)
+                }
+
+                pom.project {
+                    inceptionYear '2010'
+
+                    url 'http://www.etf-validator.net'
+
+                    if(project.repoUrl) {
+                        scm {
+                            url = "${project.repoUrl}"
+                            connection = "${project.repoUrl}"
+                            developerConnection = "${project.repoUrl}"
+                        }
+
+                        issueManagement {
+                            system 'github'
+                            url 'https://github.com/etf-validator/etf-webapp/issues'
+                        }
+
+                    }
+
+                    licenses {
+                        if(licenseHeaderName.contains('eupl-12')) {
+                            license {
+                                name 'European Union Public Licence, Version 1.2'
+                                url 'https://joinup.ec.europa.eu/software/page/eupl'
+                                distribution 'repo'
+                            }
+                        }else if(licenseHeaderName.contains('apache-2')){
+                            license {
+                                name 'The Apache Software License, Version 2.0'
+                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                distribution 'repo'
+                            }
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'jonherrmann'
+                            organization = 'interactive instruments'
+                        }
+                        developer {
+                            id = 'cportele'
+                            organization = 'interactive instruments'
+                        }
+                        developer {
+                            id = 'jechterhoff'
+                            organization = 'interactive instruments'
+                        }
+                    }
+
+                    properties {
+                        'project.build.sourceEncoding' 'UTF-8'
+                        'project.reporting.outputEncoding' 'UTF-8'
+                    }
+                }
+            }
+        }
+    }
+
+    //////////////
+    // MANIFEST //
+    //////////////
+    jar.doFirst {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Specification-Vendor': 'interactive instruments GmbH',
+                    'Specification-Vendor-Id': 'de.interactive_instruments',
+                    'Implementation-Vendor': 'interactive instruments GmbH',
+                    'Implementation-Vendor-Id': 'de.interactive_instruments',
+                    'Implementation-Version': project.version,
+                    'Implementation-Revision': repo ? repo.head().abbreviatedId : 'unknown',
+                    'Implementation-Build': project.versionBuildNumber,
+                    'Built-By': gradle.rootProject.ext.r_user,
+                    'Build-User': System.getProperty('user.name'),
+                    'Build-Host': java.net.InetAddress.getLocalHost().getHostName(),
+                    'Build-JDK': System.getProperty('java.version'),
+                    'Build-Date': new Date().format('yyMMddHHmmss'),
+                    'Build-Gradle': gradle.gradleVersion,
+                    'Build-ii-bda': gradle.rootProject.ext.bdaVersion,
+                    'Source-Compatibility': project.sourceCompatibility,
+                    'Target-Compatibility': project.targetCompatibility,
+            )
+        }
+    }
+
+    ////////////////////////////////////////
+    // CODE FORMATTING AND LICENSE HEADER //
+    ////////////////////////////////////////
+    apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
+    spotless {
+        java {
+            target spotlessJavaSrcFiles
+            licenseHeaderFile rootProject.file("./build/gradle/${project.licenseHeaderName}-header.java")
+            eclipse().configFile rootProject.file('./build/gradle/etf.eclipseformat.xml')
+            importOrder(['java', 'javax', 'com', 'org', 'de'])
+            removeUnusedImports()
+            custom 'Lambda fix', { it.replace('} )', '})').replace('} ,', '},') }
+
+            indentWithSpaces(4)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+
+        format 'groovy', {
+            target '**/*.groovy'
+            licenseHeaderFile rootProject.file("./build/gradle/${project.licenseHeaderName}-header.java"), "package "
+
+            indentWithSpaces(4)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+
+        format 'misc', {
+            target '**/*.md', '**/*.gitignore'
+
+            indentWithTabs()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+
+    ///////////////
+    // RELEASING //
+    ///////////////
+    if(gitDir) {
+        apply plugin: net.researchgate.release.ReleasePlugin
+        if (System.getenv("DEVELOPMENT_VERSION")) {
+            project.ext.set("release.newVersion", System.getenv("DEVELOPMENT_VERSION"))
+        }
+        release {
+            ext.snapshotSuffix = ""
+            failOnCommitNeeded = true
+            failOnPublishNeeded = true
+            failOnSnapshotDependencies = true
+            failOnUnversionedFiles = true
+            failOnUpdateNeeded = true
+            revertOnFail = true
+            preCommitText = ''
+            preTagCommitMessage = '[RELEASE] :new: Version '
+            tagCommitMessage = "build ${project.versionBuildNumber}, version"
+            newVersionCommitMessage = ':arrow_up: New working version '
+            tagTemplate = '${version}'
+            versionPropertyFile = 'version.properties'
+            versionProperties = []
+            buildTasks = ['build']
+            versionPatterns = [
+                    /(\d+)([^\d]*$)/: { Matcher m, Project p -> m.replaceAll("${(m[0][1] as int) + 1}${m[0][2]}-SNAPSHOT") }
+            ]
+
+            git {
+                requireBranch = 'master'
+                pushToRemote = 'origin'
+                // skip pre-commit hook
+                pushOptions = ["--no-verify"]
+                signTag = true
+            }
+        }
+
+        if (tasks.findByPath('uploadArchives') != null) {
+            beforeReleaseBuild.dependsOn updateReadme
+            afterReleaseBuild.dependsOn uploadArchives
+        }
+    }
+
+    install.doLast {
+        println "ETF-BDA: Installed version ${version}"
+    }
+
+    uploadArchives.doLast {
+        println "ETF-BDA: Uploaded version ${version}"
+    }
+
+    if (gitDir && !OperatingSystem.current().isWindows() && project.versionBuildNumber=='0') {
+        build.dependsOn installGitHooks
+    }
+}

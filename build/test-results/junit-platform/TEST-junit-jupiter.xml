@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="JUnit Jupiter" tests="0" skipped="0" failures="0" errors="0" time="1.41" hostname="JAX" timestamp="2019-02-19T14:10:42">
+<properties>
+<property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit"/>
+<property name="file.encoding" value="UTF-8"/>
+<property name="file.encoding.pkg" value="sun.io"/>
+<property name="file.separator" value="/"/>
+<property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+<property name="gopherProxySet" value="false"/>
+<property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+<property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment"/>
+<property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/>
+<property name="java.class.path" value="/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/classes/test:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/resources/test:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/classes/main:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/resources/main:/Users/herrmann/.m2/repository/de/interactive_instruments/ii-commons-util/3.0.0-SNAPSHOT/ii-commons-util-3.0.0-SNAPSHOT.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/io.rest-assured/rest-assured/3.3.0/5556c447998a44bc3590ddc0e8f66cf8389fd57f/rest-assured-3.3.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/io.rest-assured/json-path/3.3.0/60e5fb8b49d585acd94558147a213345c4b2e62e/json-path-3.3.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.xmlunit/xmlunit-core/2.6.2/b0461888cdd8d3975ea8a57df96520409cadcb6c/xmlunit-core-2.6.2.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.3.1/a7e97eac2784395cb991403f9641b042ad972941/junit-jupiter-api-5.3.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/com.tngtech.archunit/archunit-junit5-api/0.9.1/14916b719c24dde4378786afe1a4c1bddcce2f8c/archunit-junit5-api-0.9.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.3.1/e2676b1786c57a80eb98f5bebd51a3d05e228c40/junit-jupiter-engine-5.3.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/com.tngtech.archunit/archunit-junit5-engine/0.9.1/f61ab4e73622bb55d99275b3e0a3e31f5161826b/archunit-junit5-engine-0.9.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.25/da76ca59f6a57ee3102f8f9bd9cee742973efa8a/slf4j-api-1.7.25.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.7/557edd918fd41f9260963583ebf5a61a43a6b423/commons-lang3-3.7.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.5/2852e6e05fbb95076fc091f6d1780f1f8fe35e0f/commons-io-2.5.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.tika/tika-core/1.17/b450102c2aee98107474d2f92661d947b9cef183/tika-core-1.17.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy/2.4.15/74b7e0b99526c569e3a59cb84dbcc6204d601ee6/groovy-2.4.15.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-xml/2.4.15/40865f59469e6b0808c9c304bd17038997220c72/groovy-xml-2.4.15.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.3/d1577ae15f01ef5438c5afc62162457c00a34713/httpclient-4.5.3.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpmime/4.5.3/889fd6d061bb63b99dd5c6aba35a555ae863de52/httpmime-4.5.3.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-library/1.3/4785a3c21320980282f9f33d0d1264a69040538f/hamcrest-library-1.3.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.ccil.cowan.tagsoup/tagsoup/1.2.1/5584627487e984c03456266d3f8802eb85a9ce97/tagsoup-1.2.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/io.rest-assured/xml-path/3.3.0/9aa39ad687d8166c0a5125f87255d987dbb5a5e8/xml-path-3.3.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-json/2.4.15/f6f6890181821246398cd44ba1fdf74f55717697/groovy-json-2.4.15.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/io.rest-assured/rest-assured-common/3.3.0/1ff9c218ea520b5c6a2dfef12245da9e3a00938a/rest-assured-common-3.3.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.0.0/3ef5276905e36f4d8055fe3cb0bdcc7503ffc85d/apiguardian-api-1.0.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.1.1/efd9f971e91074491ea55b19f67b13470cf4fcdd/opentest4j-1.1.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.3.1/67b7edddfac1935e6e6d9b58d7c7df6db59b1d39/junit-platform-commons-1.3.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/com.tngtech.archunit/archunit/0.9.1/469a1b4c32bfb52d57160761e5c4235eb0ca3ab6/archunit-0.9.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.3.1/3ee68a06bbdab157dd260e2095c356481d6cd172/junit-platform-engine-1.3.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/com.tngtech.archunit/archunit-junit5-engine-api/0.9.1/431ee555265d240ba29e30a5dfa8702c072567af/archunit-junit5-engine-api-0.9.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.6/e3fd8ced1f52c7574af952e2e6da0df8df08eb82/httpcore-4.4.6.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.9/9ce04e34240f674bc72680f8b843b1457383161a/commons-codec-1.9.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/javax.xml.bind/jaxb-api/2.2.12/4c83805595b15acf41d71d49e3add7c0e85baaed/jaxb-api-2.2.12.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/com.sun.xml.bind/jaxb-osgi/2.2.10/e05334d55adcdb3dac418c8b1391552da497ac6c/jaxb-osgi-2.2.10.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.apache.sling/org.apache.sling.javax.activation/0.1.0/606ef790ce33d9cd6b892c47cc2a9508efc57698/org.apache.sling.javax.activation-0.1.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/javax.activation/activation/1.1.1/485de3a253e23f645037828c07f1d7f1af40763a/activation-1.1.1.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.2.0/ea230ba8c0b71943d4dd2bb215ca29041c89966e/junit-platform-launcher-1.2.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-console/1.2.0/945a6e1dc84fb16450bbdc0fa5043ab8572491f/junit-platform-console-1.2.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.2.0/35fa3529ce843ada1a10b0909ccb4a8148ee638d/junit-platform-engine-1.2.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.2.0/dbce1d822d3dc6c61703b340cd79018518685451/junit-platform-commons-1.2.0.jar:/Users/herrmann/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.1.0/c8e2a3e3bc7f3e4bb5075306452db5290f9b117a/opentest4j-1.1.0.jar"/>
+<property name="java.class.version" value="52.0"/>
+<property name="java.endorsed.dirs" value="/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/endorsed"/>
+<property name="java.ext.dirs" value="/Users/herrmann/Library/Java/Extensions:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java"/>
+<property name="java.home" value="/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre"/>
+<property name="java.io.tmpdir" value="/var/folders/pd/w95348rd6w3cwj6kvjhg1h1h0000gq/T/"/>
+<property name="java.library.path" value="/Users/herrmann/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+<property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+<property name="java.runtime.version" value="1.8.0_151-b12"/>
+<property name="java.specification.name" value="Java Platform API Specification"/>
+<property name="java.specification.vendor" value="Oracle Corporation"/>
+<property name="java.specification.version" value="1.8"/>
+<property name="java.vendor" value="Oracle Corporation"/>
+<property name="java.vendor.url" value="http://java.oracle.com/"/>
+<property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+<property name="java.version" value="1.8.0_151"/>
+<property name="java.vm.info" value="mixed mode"/>
+<property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+<property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+<property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+<property name="java.vm.specification.version" value="1.8"/>
+<property name="java.vm.vendor" value="Oracle Corporation"/>
+<property name="java.vm.version" value="25.151-b12"/>
+<property name="line.separator" value="
+"/>
+<property name="os.arch" value="x86_64"/>
+<property name="os.name" value="Mac OS X"/>
+<property name="os.version" value="10.14.3"/>
+<property name="path.separator" value=":"/>
+<property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
+<property name="sun.arch.data.model" value="64"/>
+<property name="sun.boot.class.path" value="/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/resources.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/rt.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/sunrsasign.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/jsse.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/jce.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/charsets.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib/jfr.jar:/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/classes"/>
+<property name="sun.boot.library.path" value="/Users/herrmann/.sdkman/candidates/java/8u151-oracle/jre/lib"/>
+<property name="sun.cpu.endian" value="little"/>
+<property name="sun.cpu.isalist" value=""/>
+<property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+<property name="sun.java.command" value="org.junit.platform.console.ConsoleLauncher --details NONE --scan-class-path /Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/classes/main:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/resources/main:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/classes/test:/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/resources/test -n ^(Test.*|.+[.$]Test.*|.*Tests?)$ --reports-dir /Users/herrmann/Projects/AdV-Testsuite/src/etf-assured/build/test-results/junit-platform"/>
+<property name="sun.java.launcher" value="SUN_STANDARD"/>
+<property name="sun.jnu.encoding" value="UTF-8"/>
+<property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+<property name="sun.os.patch.level" value="unknown"/>
+<property name="user.country" value="US"/>
+<property name="user.dir" value="/Users/herrmann/Projects/AdV-Testsuite/src/etf-assured"/>
+<property name="user.home" value="/Users/herrmann"/>
+<property name="user.language" value="en"/>
+<property name="user.name" value="herrmann"/>
+<property name="user.timezone" value="Europe/Berlin"/>
+<property name="user.variant" value=""/>
+</properties>
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]
+display-name: JUnit Jupiter
+]]></system-out>
+</testsuite>

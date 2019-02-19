@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./gradlew spotlessApply
+GRADLE_RESULT=$?
+
+exit $GRADLE_RESULT

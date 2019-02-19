@@ -1,0 +1,74 @@
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// ETF tests
+//
+///////////////////////////////////////////////////////////////////////////////////////
+
+buildscript {
+    repositories {
+        maven {
+            url "http://services.interactive-instruments.de/etfdev-af/plugins-releases-local"
+            credentials {
+                username 'ii-bda'
+                password '6ozhS683'
+            }}
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'de.interactive_instruments.bda', name: 'etf-bda', version:'1.0.30'
+        classpath ("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
+    }
+    dependencies {
+        ant.unjar src: configurations.classpath.files.find {it.path.contains('etf')}, dest: 'build/gradle'
+    }
+}
+apply from: 'build/gradle/ii-bda.gradle'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+group = 'de.jonherrmann.etf.test'
+description = "ETF tests using the REST API"
+
+dependencies {
+    testCompile group: 'de.interactive_instruments', name: 'ii-commons-util', version: '3.0.0' + project.snapshotSuffix
+
+    // must be before JUnit dependency
+    testCompile group: 'io.rest-assured', name: 'rest-assured', version: '3.3.0'
+    testCompile group: 'io.rest-assured', name: 'json-path', version: '3.3.0'
+
+    testCompile "org.xmlunit:xmlunit-core:2.6.2"
+
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3.1'
+    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.3.1'
+    testCompile 'com.tngtech.archunit:archunit-junit5-api:0.9.1'
+    testRuntime 'com.tngtech.archunit:archunit-junit5-engine:0.9.1'
+}
+
+// Support JUnit 5 in gradle < 4.6
+test {
+    testLogging {
+        events 'PASSED', 'FAILED', 'SKIPPED'
+    }
+
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\nTest result: ${result.resultType}"
+            println "Test summary: ${result.testCount} tests, " +
+                    "${result.successfulTestCount} succeeded, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped"
+        }
+    }
+}
+
+sourceSets {
+    test {
+        resources {
+            srcDir 'src/test/resources'
+            srcDir 'src/main/resources'
+        }
+    }
+}
